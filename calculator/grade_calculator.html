@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Grade Calculator</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav>
+  <a href="index.html">🏠 Home</a>
+  <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
+</nav>
+
+<div class="container">
+  <h1>Weighted Student Grade Calculator</h1>
+
+  <div id="assignments"></div>
+
+  <button class="action-btn add-btn" onclick="addAssignment()">Add Assignment</button>
+  <button class="action-btn calculate-btn" onclick="calculateGrade()">Calculate Grade</button>
+  <button class="action-btn clear-btn" onclick="clearAll()">Clear All</button>
+
+  <div id="result" class="result"></div>
+
+  <div class="progress-container">
+    <div id="progressBar" class="progress-bar">0%</div>
+  </div>
+
+  <table id="summaryTable">
+    <thead>
+      <tr>
+        <th>Assignment</th>
+        <th>Score Obtained</th>
+        <th>Total Points</th>
+        <th>Weight (%)</th>
+        <th>Contribution (%)</th>
+        <th>Percentage (%)</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<script>
+function addAssignment(score="", total="", weight="") {
+  const assignments=document.getElementById("assignments");
+  const group=document.createElement("div"); group.className="input-group";
+  group.innerHTML=`<input type="number" placeholder="Score Obtained" class="score" value="${score}" min="0">
+    <input type="number" placeholder="Total Points" class="total" value="${total}" min="1">
+    <input type="number" placeholder="Weight (%)" class="weight" value="${weight}" min="0">
+    <button class="remove-btn" onclick="removeAssignment(this)">Remove</button>`;
+  assignments.appendChild(group);
+}
+function removeAssignment(button){ button.parentElement.remove(); }
+
+function calculateGrade(){
+  const scores=document.querySelectorAll(".score");
+  const totals=document.querySelectorAll(".total");
+  const weights=document.querySelectorAll(".weight");
+  const tableBody=document.querySelector("#summaryTable tbody"); tableBody.innerHTML="";
+  let totalWeight=0, finalWeightedGrade=0, totalObtained=0, totalPossible=0;
+  scores.forEach((s,i)=>{
+    const score=parseFloat(s.value)||0;
+    const total=parseFloat(totals[i].value)||1;
+    const weight=parseFloat(weights[i].value)||0;
+    const percent=(score/total)*100;
+    const contribution=(percent*weight/100);
+    finalWeightedGrade+=contribution; totalWeight+=weight;
+    totalObtained+=score; totalPossible+=total;
+    tableBody.innerHTML+=`<tr><td>Assignment ${i+1}</td><td>${score.toFixed(2)}</td><td>${total.toFixed(2)}</td>
+    <td>${weight.toFixed(2)}</td><td>${contribution.toFixed(2)}</td><td>${percent.toFixed(2)}</td></tr>`;
+  });
+  const resultDiv=document.getElementById("result"); const progressBar=document.getElementById("progressBar");
+  if(totalWeight!==100){ resultDiv.innerHTML="⚠️ Total weight must equal 100%"; progressBar.style.width="0%"; progressBar.style.background="#0074D9"; progressBar.innerText="0%"; document.getElementById("summaryTable").style.display="none"; return; }
+  const finalPercent=(totalObtained/totalPossible)*100;
+  let letter="", barColor="#0074D9";
+  if(finalPercent>=90){letter="A*"; barColor="#2ECC40";}
+  else if(finalPercent>=80){letter="A"; barColor="#00BFFF";}
+  else if(finalPercent>=70){letter="B"; barColor="#FF851B";}
+  else if(finalPercent>=60){letter="C"; barColor="#FFDC00";}
+  else if(finalPercent>=50){letter="D"; barColor="#B10DC9";}
+  else{letter="F"; barColor="#FF4136";}
+  resultDiv.innerHTML=`Raw %: <strong>${finalPercent.toFixed(2)}%</strong> | Weighted %: <strong>${finalWeightedGrade.toFixed(2)}%</strong> | Letter: <strong>${letter}</strong>`;
+  document.getElementById("summaryTable").style.display="table";
+  progressBar.style.width=`${finalWeightedGrade}%`; progressBar.style.background=barColor; progressBar.innerText=`${finalWeightedGrade.toFixed(1)}%`;
+}
+
+function clearAll(){
+  document.getElementById("assignments").innerHTML="";
+  document.getElementById("result").innerText="";
+  document.getElementById("summaryTable").style.display="none";
+  const progressBar=document.getElementById("progressBar");
+  progressBar.style.width="0%"; progressBar.style.background="#0074D9"; progressBar.innerText="0%";
+  addAssignment();
+}
+
+function toggleDarkMode(){
+  document.body.classList.toggle("dark");
+  localStorage.setItem("darkMode", document.body.classList.contains("dark"));
+}
+
+window.onload=function(){
+  if(localStorage.getItem("darkMode")==="true"){ document.body.classList.add("dark"); }
+  addAssignment();
+}
+</script>
+</body>
+</html>
